@@ -10,9 +10,9 @@ import re
 # Class that holds some colour constants #
 ##########################################
 class Colour:
-    HEADER = "\033[95m"
+    PURPLE = "\033[95m"
     OK_BLUE = "\033[94m"
-    OK_GREEN = "\033[92m"
+    GREEN = "\033[92m"
     YELLOW = "\033[93m"
     RED = "\033[91m"
     ENDC = "\033[0m"
@@ -94,7 +94,7 @@ def getFiles(targetdir, fileTypes):
 # print debug information #
 ###########################
 def printParameters() :
-	printCol(Colour.HEADER, "Searching for \"" + searchKeyword + "\" in " + language + " files inside " + srcPath + "\n")
+	printCol(Colour.PURPLE, "Searching for \"" + searchKeyword + "\" in " + language + " files inside " + srcPath + "\n")
 
 
 
@@ -113,13 +113,21 @@ searchKeyword = sys.argv[3]
 printParameters()
 
 if str.lower(language) == "c" or str.lower(language) ==  "cpp":
+	printCol(Colour.GREEN, "Searching C/C++ source\n")
 	fileType = [".c", ".h", ".cpp", ".hpp"]
 elif str.lower(language) == "java":
+	printCol(Colour.GREEN, "Searching Java source\n")
 	fileType = [".java"]
-else :
-	# Change this to allow user definied file extentions to the checked
-	print "fail - unknown language"
-	sys.exit(1)
+elif str.lower(language) == "python":
+	printCol(Colour.GREEN, "Searching Python source\n")
+	fileType = ["*.py"]
+elif str.lower(language) == "shell":
+	printCol(Colour.GREEN, "Searching Shell scripts (including python scripts)\n")
+	# TODO Add logic to only check python based scripts and not all python files as it does now
+	fileType = ["*.sh", "*.py"]
+else:
+	printCol(Colour.YELLOW, "Warning cannot deduce programming language, using user input as file type extension\n")
+	fileType = language
 
 
 searchForKeywordInFile(getFiles(srcPath, fileType), searchKeyword)
