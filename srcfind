@@ -1,0 +1,126 @@
+#!/usr/bin/python
+
+import string
+import os
+import sys
+import time
+import re
+
+##########################################
+# Class that holds some colour constants #
+##########################################
+class Colour:
+    HEADER = "\033[95m"
+    OK_BLUE = "\033[94m"
+    OK_GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    RED = "\033[91m"
+    ENDC = "\033[0m"
+    
+#####################################
+# Prints using the colour passed in #
+#####################################
+def printCol(col, text):
+	print col + text + Colour.ENDC
+    
+#############################################
+# Converts a string to a regular expression #
+#############################################
+def getRegExpression(exp):
+	try:
+		expression = re.compile(re.escape(exp))
+		return expression
+	except re.error:
+		printCol(Colour.RED, "Invalid regular expression")
+		sys.exit(1)
+		
+####################
+# Colours a string #
+####################
+def colourString(col, string):
+	return col + string + Colour.ENDC
+
+#######################
+# Safely opens a file #
+#######################
+def openFile(file):
+	try:
+		fileStream = open(file, 'r')
+		return fileStream
+	except IOError:
+		print "error opening " + file
+		sys.exit(1)
+
+################################################
+# Converts the keyword to a regular expression #
+# and finds what it represents in the list of  #
+# files passed in.                             #
+################################################
+def searchForKeywordInFile(files, keyword):
+	expression = getRegExpression(keyword)
+
+	for file in files:
+		fileStream = openFile(file)
+		lines = fileStream.readlines();
+		firstFindInFile = False
+		for lineNo, line in enumerate(lines):
+			line = line.lstrip()
+			matchObj = expression.search(line)
+			if matchObj is not None:
+				if firstFindInFile is False:
+					printCol(Colour.OK_BLUE, "Found in file: " + file)
+					firstFindInFile = True
+					
+					highlightedLine =  line[:matchObj.start()] + colourString(Colour.RED, line[matchObj.start():matchObj.end()]) + line[matchObj.end():]
+					print colourString(Colour.YELLOW, str(lineNo)) + ": " + highlightedLine
+
+#####################
+# get all the files #
+#####################
+def getFiles(targetdir, fileTypes):
+	allfiles = []
+	for dir, subdirs, files in os.walk(targetdir):
+		for f in files:
+			for fileType in fileTypes:
+				if str.lower(f).endswith(fileType):
+					# compute full path name
+					f = os.path.join(dir, f)				    
+					allfiles.append(f)
+		        else:
+					continue
+	return allfiles
+
+###########################
+# print debug information #
+###########################
+def printParameters() :
+	printCol(Colour.HEADER, "Searching for \"" + searchKeyword + "\" in " + language + " files inside " + srcPath + "\n")
+
+
+
+
+###############
+# Script main #
+###############
+if len(sys.argv) != 4:
+	sys.stderr.write("Usage : srcfind srcPath languageType searchKeyword\n")
+	raise SystemExit(1)
+
+srcPath = sys.argv[1]
+language = sys.argv[2]
+searchKeyword = sys.argv[3]
+
+printParameters()
+
+if str.lower(language) == "c" or str.lower(language) ==  "cpp":
+	fileType = [".c", ".h", ".cpp", ".hpp"]
+elif str.lower(language) == "java":
+	fileType = [".java"]
+else :
+	# Change this to allow user definied file extentions to the checked
+	print "fail - unknown language"
+	sys.exit(1)
+
+
+searchForKeywordInFile(getFiles(srcPath, fileType), searchKeyword)
+
