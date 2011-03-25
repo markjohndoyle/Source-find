@@ -28,6 +28,7 @@ def printCol(col, text):
 #############################################
 def getRegExpression(exp):
 	try:
+		# escapes a string and then compiles it as a regular expression
 		expression = re.compile(re.escape(exp))
 		return expression
 	except re.error:
@@ -59,18 +60,29 @@ def openFile(file):
 def searchForKeywordInFile(files, keyword):
 	expression = getRegExpression(keyword)
 
+	# for every file passed in...
 	for file in files:
+		# open tghe file and read in all the lines...
 		fileStream = openFile(file)
 		lines = fileStream.readlines();
+		# Set a flag to determine if we have yet matched the expression in the file (for nice output only)
 		firstFindInFile = False
+		
+		# now, for every line in the file (enumerated to track the line number)...
 		for lineNo, line in enumerate(lines):
+			# strip the leading white space and search for the expression in the line
 			line = line.lstrip()
 			matchObj = expression.search(line)
+			# if we matched the expression...
 			if matchObj is not None:
+				# ..and we haven't yet matched in this file
 				if firstFindInFile is False:
+					# print a useful header for all matches in this file and set the flag to true so we don't print
+					# the header everytime we match in the same file.
 					printCol(Colour.OK_BLUE, "Found in file: " + file)
 					firstFindInFile = True
 					
+					# now print out the line number and entire line we matched the expression on and highlight the match in red
 					highlightedLine =  line[:matchObj.start()] + colourString(Colour.RED, line[matchObj.start():matchObj.end()]) + line[matchObj.end():]
 					print colourString(Colour.YELLOW, str(lineNo)) + ": " + highlightedLine
 
@@ -79,12 +91,15 @@ def searchForKeywordInFile(files, keyword):
 #####################
 def getFiles(targetdir, fileTypes):
 	allfiles = []
+	# for every file in the directory tree passed in
 	for dir, subdirs, files in os.walk(targetdir):
+		# check if it is one of the specified language type source files
 		for f in files:
 			for fileType in fileTypes:
 				if str.lower(f).endswith(fileType):
 					# compute full path name
-					f = os.path.join(dir, f)				    
+					f = os.path.join(dir, f)
+					# append it to the files list				    
 					allfiles.append(f)
 		        else:
 					continue
@@ -95,7 +110,6 @@ def getFiles(targetdir, fileTypes):
 ###########################
 def printParameters() :
 	printCol(Colour.PURPLE, "Searching for \"" + searchKeyword + "\" in " + language + " files inside " + srcPath + "\n")
-
 
 
 
@@ -112,6 +126,7 @@ searchKeyword = sys.argv[3]
 
 printParameters()
 
+# TODO move to a parse argument method
 if str.lower(language) == "c" or str.lower(language) ==  "cpp":
 	printCol(Colour.GREEN, "Searching C/C++ source\n")
 	fileType = [".c", ".h", ".cpp", ".hpp"]
